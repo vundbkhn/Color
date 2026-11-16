@@ -65,7 +65,8 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
 .back{width:clamp(48px,4.6vw,68px);height:clamp(48px,4.6vw,68px);border-radius:50%;background:#ee4d6d;color:#fff;font-size:clamp(22px,2.2vw,32px);align-self:center;flex:none;display:flex;align-items:center;justify-content:center}
 /* Khung tô luôn giữ tỉ lệ 5:4 của tranh (1000x800) và cân bằng đều 2 bên */
 #stage{flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0;min-width:0;min-height:0}
-#board{position:relative;height:var(--board-h);width:calc(var(--board-h) * 1.25);max-width:100%;aspect-ratio:5/4;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 0 0 4px #3b76f6}
+#board{position:relative;height:var(--board-h);width:calc(var(--board-h) * 1.25);max-width:100%;aspect-ratio:5/4;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 0 0 4px #3b76f6;touch-action:none}
+#zoom-layer{position:absolute;inset:0;width:100%;height:100%;transform-origin:0 0;will-change:transform;touch-action:none}
 #cv,#art{position:absolute;inset:0;width:100%;height:100%}
 #cv{touch-action:none}
 #cv.nocur{cursor:none}
@@ -74,7 +75,10 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
 #ring{position:absolute;left:0;top:0;border-radius:50%;pointer-events:none;border:2px solid #1f2937;box-shadow:0 0 0 2px rgba(255,255,255,.95),inset 0 0 0 1.5px rgba(255,255,255,.95);opacity:0;transition:opacity .15s;z-index:2;will-change:transform}
 #ring.show{opacity:1}
 #ring::after{content:'';position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#1f2937;box-shadow:0 0 0 1.5px #fff}
+#z-reset{position:absolute;top:10px;right:10px;z-index:4;background:rgba(31,41,55,.86);color:#fff;border:2px solid #fff;border-radius:99px;padding:5px 12px;font-size:13px;line-height:1.1;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#z-reset:active{transform:scale(.94)}
 .side{width:var(--side-w);height:var(--board-h);flex:none;display:flex;flex-direction:column;gap:7px;min-height:0}
+.side-grp{display:flex;flex-direction:column;min-height:0}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:7px;flex:none}
 .m{border:3px solid #e2e8f0;border-radius:16px;padding:5px 2px;font-size:clamp(12px,1vw,16px);line-height:1.1;white-space:nowrap;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 .m i{font-style:normal;font-size:clamp(22px,2.2vw,34px);line-height:1.05}
@@ -99,6 +103,7 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
   .tools{padding:4px;gap:2px}
   .tb{font-size:10px;padding:1px}.tb i{font-size:18px}
   .side{padding:6px;gap:5px}
+  .side-grp>.lbl{display:none}
   .m{padding:3px 2px;font-size:11px}.m i{font-size:19px}
   .sz button{height:28px}
   .lbl{font-size:11px;margin-bottom:2px}
@@ -106,38 +111,75 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
   .sw{width:min(100%,28px)}
 }
 
-/* ---- Màn hình DỌC (điện thoại 19.5:9, iPad dọc): công cụ trên | tranh giữa | bảng màu dưới ---- */
+/* ---- Màn hình DỌC (iPhone & iPad dọc): thanh công cụ trên cùng | tranh giữa | bảng màu & cỡ bút dưới cùng ---- */
 @media (orientation:portrait){
   #grid{--cols:3}
-  #paint{display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:8px}
-  .col{width:100%;height:auto;flex-direction:row;align-items:center;gap:6px;flex:none}
-  .back{width:clamp(42px,10.5vw,60px);height:clamp(42px,10.5vw,60px);font-size:clamp(19px,5vw,28px)}
-  .tools{flex:1;display:grid;grid-template-rows:none;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;padding:4px;overflow:visible}
-  .tb{font-size:clamp(9px,2.3vw,14px);padding:4px 1px;gap:2px}
-  .tb i{font-size:clamp(18px,5.2vw,30px)}
-  #stage{width:100%;flex:0 1 auto;display:flex;align-items:center;justify-content:center}
+  #paint{
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:stretch;
+    gap:8px;
+  }
+  /* 1. Thanh công cụ nằm ở trên cùng (vị trí vùng vàng phía trên) */
+  .col{
+    order:1;
+    width:100%;
+    height:auto;
+    flex-direction:row;
+    align-items:center;
+    gap:6px;
+    flex:none;
+  }
+  .back{width:clamp(42px,10.5vw,58px);height:clamp(42px,10.5vw,58px);font-size:clamp(19px,5vw,28px)}
+  .tools{flex:1;display:grid;grid-template-rows:none;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;padding:5px 4px;overflow:visible}
+  .tb{font-size:clamp(9px,2.2vw,14px);padding:3px 1px;gap:2px;letter-spacing:-.2px}
+  .tb i{font-size:clamp(18px,5vw,28px)}
+
+  /* 2. Khung tranh tô màu nằm giữa, tự động co giãn vừa khít khoảng trống */
+  #stage{
+    order:2;
+    width:100%;
+    flex:1 1 auto;
+    min-height:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
   #board{
-    width:min(100%,calc((var(--app-h,100dvh) - var(--safe-top) - var(--safe-bot) - 285px) * 1.25));
+    width:min(100%,calc(var(--stage-h,48dvh) * 1.25));
     height:auto;
     aspect-ratio:5/4;
   }
-  .side{width:100%;height:auto;flex:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;align-content:start;padding:8px 10px}
+
+  /* 3. Bảng màu, loại bút và cỡ bút nằm gọn ở phần bên dưới */
+  .side{
+    order:3;
+    width:100%;
+    height:auto;
+    flex:none;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px 10px;
+    align-content:start;
+    padding:8px 10px;
+  }
   .side>.lbl{grid-column:1/-1;margin:0}
-  .m{flex-direction:row;gap:6px;font-size:clamp(13px,3.3vw,17px);padding:6px 4px}.m i{font-size:clamp(20px,5.2vw,28px)}
+  .m{flex-direction:row;gap:5px;font-size:clamp(12px,3.2vw,16px);height:clamp(34px,8.5vw,46px);padding:0 4px}
+  .m i{font-size:clamp(18px,4.8vw,26px)}
   .sz{gap:6px}
-  .sz button{height:clamp(34px,8.5vw,48px)}
-  #pal{grid-column:1/-1;grid-template-columns:repeat(8,1fr);flex:none;overflow:visible;gap:5px;padding:2px}
-  .sw{width:min(100%,32px)}
+  .sz button{height:clamp(34px,8.5vw,46px)}
+  #pal{grid-column:1/-1;grid-template-columns:repeat(8,1fr);flex:none;overflow:visible;gap:6px;padding:2px}
+  .sw{width:min(100%,35px)}
 }
 @media (orientation:portrait) and (max-width:600px){
   #grid{--cols:2}
   .top{justify-content:flex-start}
   .top .title{padding:0 96px 0 4px;text-align:left;font-size:19px}
-  #pal{grid-template-columns:repeat(8,1fr);gap:5px}
-  .sw{width:min(100%,32px)}
+  #pal{grid-template-columns:repeat(8,1fr);gap:6px}
+  .sw{width:min(100%,35px)}
 }
 @media (orientation:portrait) and (min-width:601px){
-  #board{width:min(100%,calc((var(--app-h,100dvh) - var(--safe-top) - var(--safe-bot) - 250px) * 1.25))}
   #pal{grid-template-columns:repeat(12,1fr);gap:7px}
   .sw{width:min(100%,38px)}
 }
@@ -183,18 +225,24 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
   </div>
 
   <div id="stage"><div id="board">
-    <canvas id="cv"></canvas>
-    <img id="art" alt="" draggable="false">
-    <div id="ring"></div>
+    <div id="zoom-layer">
+      <canvas id="cv"></canvas>
+      <img id="art" alt="" draggable="false">
+      <div id="ring"></div>
+    </div>
+    <button id="z-reset" class="hidden" onclick="resetZoom()" aria-label="Thu nhỏ tranh">🔍 100%</button>
     <div id="stk" class="panel hidden"><div id="stkgrid"></div></div>
   </div></div>
 
   <div class="side panel">
-    <div class="row">
-      <button class="m on" id="m-brush" onclick="setMode('brush')"><i>🖌️</i>Cọ vẽ</button>
-      <button class="m" id="m-crayon" onclick="setMode('crayon')"><i>🖍️</i>Bút sáp</button>
+    <div class="side-grp">
+      <div class="lbl">Loại bút</div>
+      <div class="row">
+        <button class="m on" id="m-brush" onclick="setMode('brush')"><i>🖌️</i>Cọ vẽ</button>
+        <button class="m" id="m-crayon" onclick="setMode('crayon')"><i>🖍️</i>Bút sáp</button>
+      </div>
     </div>
-    <div>
+    <div class="side-grp">
       <div class="lbl">Cỡ bút</div>
       <div class="sz" id="sz"></div>
     </div>
@@ -228,6 +276,12 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
 
 <script>
 const $ = id => document.getElementById(id);
+function syncStageH() {
+  const stg = $('stage');
+  if (stg && stg.clientHeight > 0) {
+    document.documentElement.style.setProperty('--stage-h', stg.clientHeight + 'px');
+  }
+}
 /* Chiều cao thật của ứng dụng. Khi mở từ "Thêm vào màn hình chính" (toàn màn hình), iOS hay báo
    thiếu đúng phần status bar → nội dung bị đẩy lên, hở một dải trống ở đáy. Tính lại ở đây. */
 function fixAppH() {
@@ -246,8 +300,8 @@ function fixAppH() {
   /* Vùng an toàn chống mờ thanh trên (Dynamic Island / status bar / Safari bar) & cắt lẹm đáy */
   let topMin, botMin, sideMin;
   if (por) {
-    topMin = w <= 600 ? (sa ? 62 : 58) : (sa ? 32 : 48);
-    botMin = w <= 600 ? (sa ? 36 : 64) : (sa ? 24 : 32);
+    topMin = w <= 600 ? (sa ? 58 : 54) : (sa ? 32 : 48);
+    botMin = w <= 600 ? (sa ? 34 : 56) : (sa ? 24 : 32);
     sideMin = 12;
   } else {
     const low = h <= 520;
@@ -255,10 +309,11 @@ function fixAppH() {
     botMin = low ? 20 : (sa ? 24 : 26);
     sideMin = low ? 16 : 14;
   }
-  root.setProperty('--safe-top', `max(${topMin}px, calc(env(safe-area-inset-top, 0px) + 10px))`);
-  root.setProperty('--safe-bot', `max(${botMin}px, calc(env(safe-area-inset-bottom, 0px) + 10px))`);
+  root.setProperty('--safe-top', `max(${topMin}px, calc(env(safe-area-inset-top, 0px) + 8px))`);
+  root.setProperty('--safe-bot', `max(${botMin}px, calc(env(safe-area-inset-bottom, 0px) + 8px))`);
   root.setProperty('--safe-left', `max(${sideMin}px, env(safe-area-inset-left, 0px))`);
   root.setProperty('--safe-right', `max(${sideMin}px, env(safe-area-inset-right, 0px))`);
+  requestAnimationFrame(syncStageH);
 }
 fixAppH();
 ['resize', 'orientationchange', 'pageshow'].forEach(e => addEventListener(e, () => { fixAppH(); setTimeout(fixAppH, 150); setTimeout(fixAppH, 350); }));
@@ -489,18 +544,48 @@ addEventListener('pagehide', () => saveNow(true));
 document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(true); });
 
 /* =====================================================================
+   ZOOM & DI CHUYỂN TRANH (cử chỉ chạm nhiều ngón tay)
+   ===================================================================== */
+const zm = { s: 1, tx: 0, ty: 0 };
+const MIN_Z = 1, MAX_Z = 4;
+
+function clampZoom(s, tx, ty) {
+  s = Math.min(MAX_Z, Math.max(MIN_Z, s));
+  if (s <= 1.01) return { s: 1, tx: 0, ty: 0 };
+  const minX = W * (1 - s), minY = H * (1 - s);
+  tx = Math.min(0, Math.max(minX, tx));
+  ty = Math.min(0, Math.max(minY, ty));
+  return { s, tx, ty };
+}
+function applyZoom() {
+  const zl = $('zoom-layer');
+  if (zl) zl.style.transform = `translate3d(${zm.tx}px,${zm.ty}px,0) scale(${zm.s})`;
+  const zr = $('z-reset');
+  if (zr) {
+    const zoomed = zm.s > 1.02;
+    zr.classList.toggle('hidden', !zoomed);
+    if (zoomed) zr.textContent = `🔍 ${Math.round(zm.s * 100)}%`;
+  }
+}
+function resetZoom(silent) {
+  if (!silent && zm.s > 1.01) pop();
+  zm.s = 1; zm.tx = 0; zm.ty = 0;
+  applyZoom();
+}
+
+/* =====================================================================
    CANVAS
    ===================================================================== */
-const cv = $('cv'), art = $('art');
+const cv = $('cv'), art = $('art'), zl = $('zoom-layer');
 const ctx = cv.getContext('2d', { alpha: false });   // không cần lớp trong suốt → nhẹ GPU
 const sc = document.createElement('canvas'), sctx = sc.getContext('2d');  // lớp tạm cho nét bị cắt theo viền
 const maskCv = document.createElement('canvas'), mctx = maskCv.getContext('2d');
-let W = 0, H = 0, R = null, dpr = 1, K = 1;   // K: hệ số cỡ bút theo độ rộng khung tô
+let W = 0, H = 0, dpr = 1, K = 1;   // K: hệ số cỡ bút theo độ rộng khung tô
 
 function fit(keep) {
+  syncStageH();
   const b = $('board'), nw = b.clientWidth, nh = b.clientHeight;
   if (!nw || !nh) return;
-  R = cv.getBoundingClientRect();
   if (nw === W && nh === H) return;
   let tmp;
   if (keep && W) {
@@ -508,7 +593,7 @@ function fit(keep) {
     tmp.width = cv.width; tmp.height = cv.height;
     tmp.getContext('2d').drawImage(cv, 0, 0);
   }
-  dpr = Math.min(devicePixelRatio || 1, 1.5);        // giảm điểm ảnh → đỡ nóng máy
+  dpr = Math.min(devicePixelRatio || 1, 2);          // giữ nét sắc khi bé zoom to trên iPhone
   W = nw; H = nh;
   K = Math.min(1.5, Math.max(.85, nw / 760));        // khung to (PC) → nét bút to hơn cho cân đối
   cv.width = sc.width = maskCv.width = Math.round(nw * dpr);
@@ -517,6 +602,9 @@ function fit(keep) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
   if (tmp) ctx.drawImage(tmp, 0, 0, W, H);
+  const clamped = clampZoom(zm.s, zm.tx, zm.ty);
+  zm.s = clamped.s; zm.tx = clamped.tx; zm.ty = clamped.ty;
+  applyZoom();
   st.hist = []; snap();
   prepRegions();
 }
@@ -524,12 +612,18 @@ let rt;
 // Theo dõi chính khung tô: xoay màn hình, đổi cỡ cửa sổ, thanh địa chỉ Safari co giãn… đều được xử lý.
 const onBoardResize = () => {
   if ($('paint').classList.contains('hidden')) return;
+  syncStageH();
   clearTimeout(rt); rt = setTimeout(() => fit(true), 120);
 };
-if (window.ResizeObserver) new ResizeObserver(onBoardResize).observe($('board'));
-else addEventListener('resize', onBoardResize);
+if (window.ResizeObserver) {
+  const ro = new ResizeObserver(onBoardResize);
+  ro.observe($('board'));
+  ro.observe($('stage'));
+} else addEventListener('resize', onBoardResize);
 addEventListener('orientationchange', onBoardResize);
-document.addEventListener('gesturestart', e => e.preventDefault());
+['gesturestart', 'gesturechange', 'gestureend'].forEach(ev =>
+  document.addEventListener(ev, e => e.preventDefault(), { passive: false })
+);
 
 /* ---------- Hoàn tác (dùng lại canvas cũ, không tạo rác mới) ---------- */
 const MAX_HIST = 8;
@@ -553,6 +647,7 @@ function clearAll() {
   ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
   ctx.restore();
+  resetZoom(true);
   st.hist = []; snap(); st.touched = false; cancelSave(); DB.del(st.file);
   hide('clr'); toast('✨ Đã làm sạch tranh!');
 }
@@ -641,7 +736,13 @@ function buildMask(L) {
 }
 
 /* ---------- Vẽ ---------- */
-const pos = e => ({ x: e.clientX - R.left, y: e.clientY - R.top });
+function pos(e) {
+  const br = $('board').getBoundingClientRect();
+  return {
+    x: (e.clientX - br.left - zm.tx) / zm.s,
+    y: (e.clientY - br.top - zm.ty) / zm.s
+  };
+}
 const pr = e => (e.pointerType === 'pen' && e.pressure) ? .7 + e.pressure * .6 : 1;
 
 function drawSeg(c, x1, y1, x2, y2, s, color, crayon) {
@@ -711,30 +812,91 @@ function ringOff(delay) {
 }
 function ringPreview() {                              // xem trước cỡ bút khi đổi cỡ
   if (!W || st.mode === 'sticker') return;
-  ringAt(W / 2, H / 2, 1); ringOff(900);
+  const cx = (W / 2 - zm.tx) / zm.s, cy = (H / 2 - zm.ty) / zm.s;
+  ringAt(cx, cy, 1); ringOff(900);
 }
 
-cv.addEventListener('pointerover', e => { if (e.pointerType !== 'touch' && R) { const p = pos(e); ringAt(p.x, p.y, pr(e)); } });
-cv.addEventListener('pointerleave', () => { if (!st.down) { ringOff(); cv.classList.remove('nocur'); } });
-cv.addEventListener('pointerdown', e => {
-  if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
-  e.preventDefault();
-  R = cv.getBoundingClientRect();
-  const p = pos(e);
-  ringAt(p.x, p.y, pr(e));
-  if (st.mode === 'sticker') return stamp(p.x, p.y);
-  try { cv.setPointerCapture(e.pointerId); } catch (_) {}
-  st.down = 1; st.reg = 0; st.x = p.x; st.y = p.y;
-  seg(p.x, p.y, p.x + .01, p.y, pr(e));
+/* ---------- Cử chỉ vẽ 1 ngón & zoom/di chuyển nhiều ngón ---------- */
+const ptrs = new Map();
+let pinching = false, waitAllUp = false, strokeMoved = 0, strokeStart = null, pInit = null;
+
+function cancelOrCommitStroke() {
+  if (!st.down) return;
+  if (strokeMoved < 14 && st.hist.length > 0) {
+    // Mới chạm ngón 1 để chuẩn bị chụm 2 ngón zoom → hoàn tác chấm nhỏ vừa lỡ vẽ
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(st.hist[st.hist.length - 1], 0, 0);
+    ctx.restore();
+  } else {
+    snap(); touch();
+  }
+  st.down = 0; st.reg = 0; ringOff();
+}
+
+zl.addEventListener('pointerover', e => {
+  if (e.pointerType !== 'touch' && W && !pinching) { const p = pos(e); ringAt(p.x, p.y, pr(e)); }
 });
-cv.addEventListener('pointermove', e => {
-  if (!e.isPrimary) return;
-  const p = pos(e);
-  if (!st.down) {                                     // bút/chuột lướt: vòng tròn đi theo trước khi chạm
-    if (e.pointerType !== 'touch' && R) ringAt(p.x, p.y, pr(e));
+zl.addEventListener('pointerleave', () => {
+  if (!st.down) { ringOff(); cv.classList.remove('nocur'); }
+});
+zl.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  e.preventDefault();
+  ptrs.set(e.pointerId, { cx: e.clientX, cy: e.clientY });
+  try { zl.setPointerCapture(e.pointerId); } catch (_) {}
+
+  if (ptrs.size >= 2) {
+    cancelOrCommitStroke();
+    pinching = true;
+    waitAllUp = true;
+    const [a, b] = [...ptrs.values()];
+    const br = $('board').getBoundingClientRect();
+    const mx = (a.cx + b.cx) / 2 - br.left, my = (a.cy + b.cy) / 2 - br.top;
+    const dist = Math.max(10, Math.hypot(b.cx - a.cx, b.cy - a.cy));
+    pInit = { dist, s: zm.s, fx: (mx - zm.tx) / zm.s, fy: (my - zm.ty) / zm.s };
     return;
   }
+
+  if (waitAllUp || pinching) return;
+  const p = pos(e);
+  ringAt(p.x, p.y, pr(e));
+  if (st.mode === 'sticker') {
+    strokeMoved = 0;
+    strokeStart = { x: e.clientX, y: e.clientY };
+    return;
+  }
+  st.down = 1; st.reg = 0; st.x = p.x; st.y = p.y;
+  strokeMoved = 0;
+  strokeStart = { x: e.clientX, y: e.clientY };
+  seg(p.x, p.y, p.x + .01, p.y, pr(e));
+});
+zl.addEventListener('pointermove', e => {
+  if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { cx: e.clientX, cy: e.clientY });
+
+  if (pinching && ptrs.size >= 2 && pInit) {
+    e.preventDefault();
+    const [a, b] = [...ptrs.values()];
+    const br = $('board').getBoundingClientRect();
+    const mx = (a.cx + b.cx) / 2 - br.left, my = (a.cy + b.cy) / 2 - br.top;
+    const dist = Math.max(10, Math.hypot(b.cx - a.cx, b.cy - a.cy));
+    const rawS = pInit.s * (dist / pInit.dist);
+    const next = clampZoom(rawS, mx - pInit.fx * rawS, my - pInit.fy * rawS);
+    zm.s = next.s; zm.tx = next.tx; zm.ty = next.ty;
+    applyZoom();
+    return;
+  }
+
+  if (strokeStart) {
+    strokeMoved = Math.max(strokeMoved, Math.hypot(e.clientX - strokeStart.x, e.clientY - strokeStart.y));
+  }
+
+  if (!st.down) {
+    if (e.pointerType !== 'touch' && W && !pinching) { const p = pos(e); ringAt(p.x, p.y, pr(e)); }
+    return;
+  }
+  if (pinching || waitAllUp) return;
   e.preventDefault();
+  const p = pos(e);
   ringAt(p.x, p.y, pr(e));
   const list = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
   for (const q of (list.length ? list : [e])) {
@@ -744,11 +906,29 @@ cv.addEventListener('pointermove', e => {
   }
 });
 const end = e => {
-  if (e.pointerType === 'touch') ringOff(600);        // giữ vòng tròn chút để bé thấy chỗ vừa tô
-  if (st.down) { st.down = 0; st.reg = 0; snap(); touch(); }
+  ptrs.delete(e.pointerId);
+  if (e.pointerType === 'touch' && st.down) ringOff(600);
+  if (st.down) {
+    st.down = 0; st.reg = 0; snap(); touch();
+  } else if (st.mode === 'sticker' && !pinching && !waitAllUp && ptrs.size === 0 && e.type === 'pointerup' && strokeMoved < 16) {
+    const p = pos(e);
+    if (p.x >= 0 && p.x <= W && p.y >= 0 && p.y <= H) stamp(p.x, p.y);
+  }
+  if (ptrs.size < 2) { pinching = false; pInit = null; }
+  if (ptrs.size === 0) { waitAllUp = false; strokeMoved = 0; strokeStart = null; }
 };
-cv.addEventListener('pointerup', end);
-cv.addEventListener('pointercancel', end);
+zl.addEventListener('pointerup', end);
+zl.addEventListener('pointercancel', end);
+zl.addEventListener('wheel', e => {
+  e.preventDefault();
+  const br = $('board').getBoundingClientRect();
+  const mx = e.clientX - br.left, my = e.clientY - br.top;
+  const fx = (mx - zm.tx) / zm.s, fy = (my - zm.ty) / zm.s;
+  const rawS = zm.s * Math.exp(-e.deltaY * 0.002);
+  const next = clampZoom(rawS, mx - fx * rawS, my - fy * rawS);
+  zm.s = next.s; zm.tx = next.tx; zm.ty = next.ty;
+  applyZoom();
+}, { passive: false });
 
 /* ---------- Công cụ ---------- */
 function setMode(m, silent) {
@@ -815,11 +995,17 @@ function buildUI() {
 function openPaint(title, file) {
   pop();
   st.title = title; st.file = file; st.touched = false;
+  resetZoom(true);
   art.src = ART[file];
   $('gallery').classList.add('hidden');
   $('paint').classList.remove('hidden');
   W = 0;                                              // buộc khởi tạo lại canvas
-  requestAnimationFrame(async () => { fit(false); setMode('brush', true); await restore(file); });
+  requestAnimationFrame(async () => {
+    syncStageH();
+    fit(false);
+    setMode('brush', true);
+    await restore(file);
+  });
 }
 function home() {
   pop();
@@ -827,6 +1013,7 @@ function home() {
   $('paint').classList.add('hidden');
   $('gallery').classList.remove('hidden');
   art.removeAttribute('src');
+  resetZoom(true);
   ringOff(); cv.classList.remove('nocur');
   st.hist = []; line = lab = maskImg = m32 = null; regReady = false; curMask = 0; prepId++;   // giải phóng bộ nhớ
   saved.then(markSaved);
