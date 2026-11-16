@@ -117,9 +117,9 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
   #paint{
     display:flex;
     flex-direction:column;
-    justify-content:space-between;
+    justify-content:center;   /* gom cả cụm: công cụ + tranh + bảng màu nằm sát nhau, căn giữa vùng an toàn */
     align-items:stretch;
-    gap:8px;
+    gap:10px;
   }
   /* 1. Thanh công cụ nằm ở trên cùng (vị trí vùng vàng phía trên) */
   .col{
@@ -137,18 +137,22 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
   .tb i{font-size:clamp(18px,5vw,28px)}
 
   /* 2. Khung tranh tô màu nằm giữa, tự động co giãn vừa khít khoảng trống */
+  /* Khung tranh luôn giữ tỉ lệ 5:4, cao đúng bằng tranh (không còn khoảng trống thừa);
+     nếu màn hình thấp thì tự co lại (flex-shrink) để bảng màu không bị cắt */
   #stage{
     order:2;
     width:100%;
-    flex:1 1 auto;
+    flex:0 1 auto;
+    aspect-ratio:5/4;
     min-height:0;
     display:flex;
     align-items:center;
     justify-content:center;
   }
   #board{
-    width:min(100%,calc(var(--stage-h,48dvh) * 1.25));
-    height:auto;
+    height:100%;
+    width:auto;
+    max-width:100%;
     aspect-ratio:5/4;
   }
 
