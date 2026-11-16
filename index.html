@@ -14,13 +14,13 @@
 <title>Bé Tập Tô Màu</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
-html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;font-family:ui-rounded,"SF Pro Rounded","Nunito",system-ui,sans-serif;background:#fdf3e3;color:#3b3b4f;font-weight:800}
+html,body{margin:0;height:100%;min-height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;font-family:ui-rounded,"SF Pro Rounded","Nunito",system-ui,sans-serif;background:#fdf3e3;color:#3b3b4f;font-weight:800}
 button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;padding:0}
 .hidden{display:none!important}
 .off{opacity:.55}
 
 /* ---- Màn hình chọn tranh ---- */
-.screen{position:absolute;inset:0;display:flex;gap:10px;padding:max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+.screen{position:fixed;top:0;left:0;right:0;bottom:auto;height:var(--app-h,100%);display:flex;gap:10px;padding:max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
 #gallery{flex-direction:column;align-items:center}
 #gallery>*{width:100%;max-width:1760px}
 .top{position:relative;display:flex;align-items:center;justify-content:center;font-size:clamp(19px,3vw,44px);color:#e94f78;flex:none;min-height:44px}
@@ -116,7 +116,7 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
 }
 
 /* ---- Hộp thoại ---- */
-.modal{position:fixed;inset:0;z-index:20;background:rgba(30,30,50,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{position:fixed;top:0;left:0;right:0;bottom:auto;height:var(--app-h,100%);z-index:20;background:rgba(30,30,50,.6);display:flex;align-items:center;justify-content:center;padding:16px}
 .box{background:#fff;border-radius:28px;padding:20px;max-width:620px;width:100%;max-height:94vh;max-height:94dvh;overflow-y:auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
 .box img{max-height:50vh;max-height:50dvh;max-width:100%;border-radius:14px;border:2px solid #fde9c8;-webkit-touch-callout:default;user-select:auto;-webkit-user-select:auto}
 .btns{display:flex;gap:10px;width:100%}
@@ -125,7 +125,6 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
 .btns .r{background:#ef4444}
 .btns .g{background:#e2e8f0;color:#333}
 #toast{position:fixed;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#2b2b3a;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:30;pointer-events:none;white-space:nowrap}
-@supports (height:100dvh){html,body{height:100dvh}}
 </style>
 </head>
 <body>
@@ -199,6 +198,21 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
 
 <script>
 const $ = id => document.getElementById(id);
+/* Chiều cao thật của ứng dụng. Khi mở từ "Thêm vào màn hình chính" (toàn màn hình), iOS hay báo
+   thiếu đúng phần status bar → nội dung bị đẩy lên, hở một dải trống ở đáy. Tính lại ở đây. */
+function fixAppH() {
+  let h = innerHeight;
+  const sa = navigator.standalone || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
+  if (sa) {
+    const sw = screen.width, sh = screen.height, por = innerHeight >= innerWidth;
+    const full = por ? Math.max(sw, sh) : Math.min(sw, sh);
+    if (full > h && full - h <= 120) h = full;
+  }
+  document.documentElement.style.setProperty('--app-h', h + 'px');
+}
+fixAppH();
+['resize', 'orientationchange', 'pageshow'].forEach(e => addEventListener(e, () => { fixAppH(); setTimeout(fixAppH, 300); }));
+if (window.visualViewport) visualViewport.addEventListener('resize', fixAppH);
 const store = {
   get: (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (_) { return d; } },
   set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} }
