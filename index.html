@@ -49,7 +49,7 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
 #paint{
   --col-w:clamp(90px,8.2vw,124px);
   --side-w:clamp(192px,18vw,280px);
-  --avail-h:calc(var(--app-h,100dvh) - var(--safe-top) - var(--safe-bot));
+  --avail-h:calc(var(--app-h,100dvh) - var(--safe-top) - var(--edge-pad,0px) - var(--safe-bot));
   --avail-w:calc(100vw - var(--safe-left) - var(--safe-right) - var(--col-w) - var(--side-w) - 20px);
   --board-h:min(var(--avail-h),calc(var(--avail-w) * .8));
   align-items:center;
@@ -207,8 +207,9 @@ button{font:inherit;border:0;cursor:pointer;color:inherit;background:none;paddin
 /* ---- Vùng an toàn & kích thước theo thiết bị ---- */
 html{background:#fdf3e3}
 body::before{content:'';position:fixed;top:0;left:0;right:0;height:var(--inset-top,0px);background:#fdf3e3;z-index:10;pointer-events:none}   /* dải nền đặc phủ khu vực thanh trạng thái: không để nội dung lộ mờ bên dưới */
-#gallery{padding-bottom:0;padding-top:calc(var(--safe-top) + var(--edge-pad,0px))}   /* iPhone dọc: né dải iOS làm mờ phía dưới thanh trạng thái */
-#grid{padding-bottom:calc(var(--safe-bot) + 104px);scroll-padding-bottom:calc(var(--safe-bot) + 104px);overscroll-behavior:contain}
+#gallery{padding-bottom:0}
+#gallery,#paint{padding-top:calc(var(--safe-top) + var(--edge-pad,0px))}   /* iPhone dọc: né dải iOS làm mờ phía dưới thanh trạng thái */
+#grid{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 34px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 34px),transparent);padding-bottom:calc(var(--safe-bot) + 104px);scroll-padding-bottom:calc(var(--safe-bot) + 104px);overscroll-behavior:contain}
 @media (orientation:landscape) and (min-width:1700px){#grid{--cols:6}}   /* PC Full HD 1920x1080 */
 
 
@@ -507,7 +508,7 @@ function fixAppH() {
   }
   const root = document.documentElement.style, cl = document.documentElement.classList;
   root.setProperty('--app-h', h + 'px');
-  root.setProperty('--edge-pad', (DEV.kind === 'phone' && por && env.t > 0 ? 18 : 0) + 'px');
+  root.setProperty('--edge-pad', (DEV.kind === 'phone' && por && env.t > 0 ? 20 : 0) + 'px');
   root.setProperty('--vp-gap', Math.max(0, h - ih) + 'px');   // phần khung game vượt quá innerHeight: chừa lại để nút/đáy hộp thoại không bị cắt
   root.setProperty('--safe-top', top + 'px');
   root.setProperty('--safe-bot', bot + 'px');
@@ -1275,7 +1276,7 @@ start();
 
 <script>
 /* ===== CÀI ĐẶT · TỰ CẬP NHẬT · CHẠY OFFLINE ===== */
-const VER='1.1.5',APP='be-to-mau';          // VER, APP phải trùng với sw.js
+const VER='1.1.6',APP='be-to-mau';          // VER, APP phải trùng với sw.js
 let reg=null,nv=null,upd=0,aut=store.get('bto-au','1')!=='0';
 const qa=s=>document.querySelectorAll(s),sl=ms=>new Promise(r=>setTimeout(r,ms));
 function us(t,k){$('se-us').textContent=t;$('se-dot').className='se-dot'+(k?' is-'+k:'')}
