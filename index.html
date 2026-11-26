@@ -278,6 +278,8 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;height:var(--inset-t
 .se-vl svg{flex:none;width:26px;height:26px}
 .se-vl input{flex:1;min-width:0;accent-color:#e94f78;touch-action:pan-x}
 .se-vl output{flex:none;min-width:44px;text-align:right;font-size:14px}
+/* dòng chẩn đoán kích thước */
+.se-diag{padding:0 6px;font-size:12px;line-height:1.4;color:#8a7a68;word-break:break-word}
 #ub{position:fixed;left:50%;transform:translateX(-50%);bottom:var(--safe-bot);z-index:24;max-width:calc(100% - 24px);background:#2b2b3a;color:#fff;border-radius:99px;padding:8px 8px 8px 18px;display:flex;align-items:center;gap:12px;font-size:14px;white-space:nowrap}
 #ub[hidden]{display:none}
 #ub button{background:#ee4d6d;color:#fff;border-radius:99px;padding:8px 16px;font-size:14px}
@@ -384,6 +386,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;height:var(--inset-t
   <div class="se-pn" id="p-vs">
    <div class="se-vh"><svg class="se-lg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#e94f78"/><circle cx="48" cy="54" r="33" fill="#fff7e6"/><circle cx="31" cy="40" r="6.500" fill="#2563eb"/><circle cx="46" cy="30" r="6.500" fill="#facc15"/><circle cx="62" cy="34" r="6.500" fill="#22c55e"/><circle cx="31" cy="58" r="6.500" fill="#9333ea"/><circle cx="58" cy="66" r="7" fill="#e74f76"/><path d="M52 84L82 30" stroke="#7a4b00" stroke-width="5" stroke-linecap="round"/><path d="M86 22l5 5-5 5-5-5z" fill="#3b76f6"/></svg><div><b>Bé Tập Tô Màu</b><span class="se-chip" id="se-vr"></span></div></div>
    <div class="se-stt"><span class="se-dot" id="se-dot"></span><span id="se-us">Chưa kiểm tra</span></div>
+   <div class="se-diag" id="se-diag"></div>
    <button class="se-row" data-sw="au" role="switch" aria-checked="true"><span class="se-ic" style="background:linear-gradient(150deg,#3a8fd6,#21508a)"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.5 4v5h-5"/></svg></span><div><b>Tự động kiểm tra</b><small>Tìm bản mới mỗi khi mở ứng dụng</small></div><span class="se-tg"></span></button>
    <button class="se-go" id="se-uc"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.5 4v5h-5"/></svg><span id="se-ucT">Kiểm tra cập nhật</span></button>
   </div>
@@ -438,18 +441,40 @@ function readInsets() {
   const c = getComputedStyle(_probe);
   return { t: parseFloat(c.paddingTop) || 0, r: parseFloat(c.paddingRight) || 0, b: parseFloat(c.paddingBottom) || 0, l: parseFloat(c.paddingLeft) || 0 };
 }
+let _pv;
+function probeVh() {                                  // chiều cao "khung lớn" do CSS tính (100lvh): iOS thường báo đúng ngay cả khi innerHeight bị hụt
+  if (!_pv) {
+    _pv = document.createElement('div');
+    _pv.style.cssText = 'position:fixed;left:0;top:0;width:0;visibility:hidden;pointer-events:none;height:100vh;height:100lvh';
+    document.body.appendChild(_pv);
+  }
+  return _pv.getBoundingClientRect().height;
+}
+const PHONE_H = { 440: 956, 430: 932, 428: 926, 402: 874, 393: 852, 390: 844 };   // chiều cao pt của iPhone theo bề rộng (16 Pro Max, 15/14 Pro Max, 16 Pro, 16...)
 const islandTop = w => w >= 402 ? 62 : w >= 393 ? 59 : 47;   // iPhone 16 = 59pt; 16 Pro / Pro Max = 62pt
 function fixAppH() {
-  let h = innerHeight;
-  const w = innerWidth, por = h >= w;
+  const ih = innerHeight;
+  let h = ih;
+  const w = innerWidth, por = ih >= w;
   const sa = navigator.standalone || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
-  /* Khi mở từ "Thêm vào màn hình chính" (toàn màn hình), iOS hay báo thiếu đúng phần status bar → hở một dải trống ở đáy. */
-  if (sa) {
-    const sw = screen.width, sh = screen.height;
-    const full = por ? Math.max(sw, sh) : Math.min(sw, sh);
-    if (full > h && full - h <= 120) h = full;
-  }
   const env = readInsets();
+  /* iOS mở toàn màn hình hay báo innerHeight (và cả screen.height) hụt đúng bằng vùng status bar/Dynamic Island
+     → khung game ngắn hơn màn hình thật, hở một dải trống ở đáy. Lấy số lớn nhất trong các nguồn đo độc lập,
+     chỉ chấp nhận nếu chênh ≤ 120pt so với innerHeight. */
+  const dg = { ih, sh: screen.height, lvh: 0, vv: 0 };
+  if (DEV.kind !== 'pc' && (sa || env.t > 0)) {
+    const sLong = por ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+    dg.lvh = Math.round(probeVh());
+    dg.vv = window.visualViewport ? Math.round(visualViewport.height + visualViewport.offsetTop) : 0;
+    const cand = [ih, dg.lvh, dg.vv, sLong];
+    if (DEV.kind === 'phone' && por) {
+      const th = PHONE_H[w];
+      if (th) cand.push(th);
+      cand.push(Math.min(ih + (env.t || islandTop(w)), Math.max(sLong, th || 0)));
+    }
+    const best = Math.max(...cand);
+    if (best > ih && best - ih <= 120) h = Math.round(best);
+  }
   let top, bot, left, right, band = env.t;
   if (DEV.kind === 'pc') {                                   // Full HD 16:9: không có vùng khuyết, tận dụng tối đa
     top = 14; bot = 14; left = right = 20;
@@ -487,7 +512,8 @@ function fixAppH() {
   ['phone', 'tablet', 'pc'].forEach(k => cl.toggle('dev-' + k, DEV.kind === k));
   cl.toggle('o-por', por); cl.toggle('o-land', !por);
   cl.toggle('ar-tall', DEV.kind === 'phone' && por && h / w >= 2);   // iPhone 19.5:9 (cao ≥ 2 lần rộng)
-  window.VP = { w, h, ar: Math.max(w, h) / Math.min(w, h), por, sa, top, bot };
+  dg.h = h; dg.et = env.t; dg.eb = env.b;
+  window.VP = { w, h, ar: Math.max(w, h) / Math.min(w, h), por, sa, top, bot, dg };
   requestAnimationFrame(syncStageH);
 }
 fixAppH();
@@ -1252,7 +1278,7 @@ start();
 
 <script>
 /* ===== CÀI ĐẶT · TỰ CẬP NHẬT · CHẠY OFFLINE ===== */
-const VER='1.1.0',APP='be-to-mau';          // VER, APP phải trùng với sw.js
+const VER='1.1.1',APP='be-to-mau';          // VER, APP phải trùng với sw.js
 let reg=null,nv=null,upd=0,aut=store.get('bto-au','1')!=='0';
 const qa=s=>document.querySelectorAll(s),sl=ms=>new Promise(r=>setTimeout(r,ms));
 function us(t,k){$('se-us').textContent=t;$('se-dot').className='se-dot'+(k?' is-'+k:'')}
@@ -1313,7 +1339,7 @@ function tabTo(p){
   $('se-tabs').dataset.i=['gx','vs','au'].indexOf(p);$('se-pb').scrollTop=0;
 }
 qa('.se-tb').forEach(b=>b.onclick=()=>{pop();tabTo(b.dataset.p)});
-function openSe(){syncSe();$('se-dev').textContent=devSummary();$('se').classList.add('on');$('se').setAttribute('aria-hidden','false')}
+function openSe(){syncSe();{const g=VP.dg;$('se-diag').textContent='Màn hình: trong '+innerWidth+'×'+g.ih+' · máy '+screen.width+'×'+g.sh+' · khung game '+g.h+' · lvh '+g.lvh+' · an toàn '+g.et+'/'+g.eb}$('se-dev').textContent=devSummary();$('se').classList.add('on');$('se').setAttribute('aria-hidden','false')}
 function closeSe(){$('se').classList.remove('on');$('se').setAttribute('aria-hidden','true')}
 $('gear-g').onclick=()=>{pop();openSe()};
 $('se-x').onclick=()=>{pop();closeSe()};

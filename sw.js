@@ -1,5 +1,5 @@
 /* Service worker: cache-first, chạy offline hoàn toàn. VER viết dạng VER='x.y.z' (dấu nháy ĐƠN) để index.html đọc được. */
-const VER='1.1.0',APP='be-to-mau',C=APP+'-'+VER,
+const VER='1.1.1',APP='be-to-mau',C=APP+'-'+VER,
 A=['./','./index.html'],                       // bắt buộc có, thiếu là install thất bại
 X=['./manifest.webmanifest','./bm-icon-180.png','./bm-icon-192.png','./bm-icon-512.png','./bm-icon-maskable-512.png']; // thiếu cũng không sao
 const rq=u=>new Request(u,{cache:'reload'});   // bỏ qua HTTP cache khi precache
