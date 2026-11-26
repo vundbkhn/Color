@@ -1,0 +1,18 @@
+{
+ "id": "./",
+ "name": "Bé Tập Tô Màu",
+ "short_name": "Bé Tô Màu",
+ "description": "Ứng dụng tô màu vui nhộn cho bé, có nhạc nền và nhãn dán. Chơi được khi không có mạng.",
+ "lang": "vi",
+ "start_url": "./",
+ "scope": "./",
+ "display": "fullscreen",
+ "orientation": "any",
+ "background_color": "#fdf3e3",
+ "theme_color": "#fdf3e3",
+ "icons": [
+  {"src": "bm-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+  {"src": "bm-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+  {"src": "bm-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+ ]
+}
