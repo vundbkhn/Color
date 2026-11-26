@@ -230,7 +230,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;height:var(--inset-t
 .se-wrap.on{opacity:1;pointer-events:auto}
 .se-wrap svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .se-wrap svg.se-pv,.se-wrap svg.se-lg{stroke:none}
-.se-sheet{width:min(100%,600px);max-height:min(90%,740px);background:#fdf3e3;border-radius:28px 28px 0 0;padding:14px 16px calc(var(--safe-bot) + 4px);display:flex;flex-direction:column;gap:10px;transform:translateY(100%);transition:transform .25s}
+.se-sheet{width:min(100%,600px);max-height:min(90%,740px);background:#fdf3e3;border-radius:28px 28px 0 0;padding:14px 16px calc(max(var(--safe-bot),var(--vp-gap,0px)) + 12px);display:flex;flex-direction:column;gap:10px;transform:translateY(100%);transition:transform .25s}
 .se-wrap.on .se-sheet{transform:none}
 @media (min-width:700px) and (min-height:700px){.se-wrap{align-items:center}.se-sheet{border-radius:28px;padding-bottom:18px}}
 .se-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none}
@@ -246,7 +246,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;height:var(--inset-t
 .se-tb{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;font-size:13px;color:#8a7a68;border-radius:17px}
 .se-tb svg{width:26px;height:26px}
 .se-tb.on{color:#c2365a}
-.se-pb{overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:2px 2px 6px}
+.se-pb{overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:2px 2px 14px}
 .se-pn{display:none;flex-direction:column;gap:10px}
 .se-pn.on{display:flex}
 .se-cap{margin:0;font-size:14px;color:#8a7a68;font-weight:700}
@@ -504,6 +504,7 @@ function fixAppH() {
   }
   const root = document.documentElement.style, cl = document.documentElement.classList;
   root.setProperty('--app-h', h + 'px');
+  root.setProperty('--vp-gap', Math.max(0, h - ih) + 'px');   // phần khung game vượt quá innerHeight: chừa lại để nút/đáy hộp thoại không bị cắt
   root.setProperty('--safe-top', top + 'px');
   root.setProperty('--safe-bot', bot + 'px');
   root.setProperty('--safe-left', left + 'px');
@@ -1270,7 +1271,7 @@ start();
 
 <script>
 /* ===== CÀI ĐẶT · TỰ CẬP NHẬT · CHẠY OFFLINE ===== */
-const VER='1.1.2',APP='be-to-mau';          // VER, APP phải trùng với sw.js
+const VER='1.1.3',APP='be-to-mau';          // VER, APP phải trùng với sw.js
 let reg=null,nv=null,upd=0,aut=store.get('bto-au','1')!=='0';
 const qa=s=>document.querySelectorAll(s),sl=ms=>new Promise(r=>setTimeout(r,ms));
 function us(t,k){$('se-us').textContent=t;$('se-dot').className='se-dot'+(k?' is-'+k:'')}
